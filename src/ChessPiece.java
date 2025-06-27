@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.List;
 
-public abstract class ChessPiece {
+public abstract class ChessPiece implements Serializable {
     public enum Color { WHITE, BLACK }
 
     protected Color color;

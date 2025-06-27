@@ -1,3 +1,8 @@
+import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
+import java.io.FileInputStream;
 import java.util.Scanner;
 import java.util.List;
 
@@ -73,7 +78,25 @@ public class ChessGame {
     private void switchTurn() {
         currentPlayer = (currentPlayer == whitePlayer) ? blackPlayer : whitePlayer;
     }
+    // Speichern
+    public void saveGame(String filename) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
+            out.writeObject(this);
+            System.out.println("Spiel gespeichert.");
+        } catch (IOException e) {
+            System.out.println("Fehler beim Speichern: " + e.getMessage());
+        }
+    }
 
+    // Laden (statische Methode)
+    public static ChessGame loadGame(String filename) {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
+            return (ChessGame) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Fehler beim Laden: " + e.getMessage());
+            return null;
+        }
+    }
     public static void main(String[] args) {
         new ChessGame().start();
     }

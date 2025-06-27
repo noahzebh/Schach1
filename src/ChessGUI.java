@@ -90,5 +90,7 @@ public class ChessGUI extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(ChessGUI::new);
     }
+    // In ChessGUI.java
+
 }
 
