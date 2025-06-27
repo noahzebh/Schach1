@@ -42,6 +42,6 @@ public class Queen extends ChessPiece {
 
     @Override
     public String getSymbol() {
-        return isWhite() ? "♕" : "♛";
+        return isWhite() ? "\u2655" : "\u265B";
     }
 }

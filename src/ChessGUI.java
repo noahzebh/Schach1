@@ -26,7 +26,7 @@ public class ChessGUI extends JFrame {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 JButton button = new JButton();
-                button.setFont(new Font("Arial", Font.PLAIN, 32));
+                button.setFont(new Font("Arial Unicode MS", Font.PLAIN, 32));
                 int finalRow = row;
                 int finalCol = col;
                 button.addActionListener(e -> handleClick(finalRow, finalCol));
