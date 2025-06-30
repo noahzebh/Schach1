@@ -1,4 +1,3 @@
-import java.util.List;
 public class Board {
     private ChessPiece[][] grid;
     private Position lastMoveFrom;
@@ -22,46 +21,57 @@ public class Board {
 
     public void movePiece(Position from, Position to) {
         ChessPiece piece = getPiece(from);
-        if (piece == null) return;
+        if (piece != null) {
+            lastMoveFrom = from;
+            lastMoveTo = to;
 
-        // Speichern für en passant
-        lastMoveFrom = from;
-        lastMoveTo = to;
-
-        // En passant
-        if (piece instanceof Pawn && from.getCol() != to.getCol() && getPiece(to) == null) {
-            int direction = piece.isWhite() ? 1 : -1;
-            Position enemyPos = new Position(to.getRow() + direction, to.getCol());
-            setPiece(enemyPos, null);
-        }
-
-        // Rochade
-        if (piece instanceof King && Math.abs(to.getCol() - from.getCol()) == 2) {
-            int row = from.getRow();
-            if (to.getCol() == 6) { // kurze Rochade
-                ChessPiece rook = getPiece(new Position(row, 7));
-                setPiece(new Position(row, 5), rook);
-                rook.setPosition(new Position(row, 5));
-                setPiece(new Position(row, 7), null);
-            } else if (to.getCol() == 2) { // lange Rochade
-                ChessPiece rook = getPiece(new Position(row, 0));
-                setPiece(new Position(row, 3), rook);
-                rook.setPosition(new Position(row, 3));
-                setPiece(new Position(row, 0), null);
+            // En-passant-Schlag
+            if (piece instanceof Pawn && from.getCol() != to.getCol() && getPiece(to) == null) {
+                int direction = piece.isWhite() ? 1 : -1;
+                Position enemyPos = new Position(to.getRow() + direction, to.getCol());
+                setPiece(enemyPos, null);
             }
-        }
 
-        // Zug durchführen
-        setPiece(to, piece);
-        piece.setPosition(to);
-        setPiece(from, null);
-        piece.setHasMoved(true);
+            // Normale Bewegung
+            setPiece(to, piece);
+            piece.setPosition(to);
+            setPiece(from, null);
 
-        // Umwandlung in Dame
-        if (piece instanceof Pawn) {
-            int endRow = piece.isWhite() ? 0 : 7;
-            if (to.getRow() == endRow) {
-                setPiece(to, new Queen(piece.getColor(), to));
+            // Umwandlung
+            if (piece instanceof Pawn) {
+                int endRow = piece.isWhite() ? 0 : 7;
+                if (to.getRow() == endRow) {
+                    setPiece(to, new Queen(piece.getColor(), to));
+                }
+            }
+
+            // Rochade
+            if (piece instanceof King) {
+                int row = from.getRow();
+                if (Math.abs(from.getCol() - to.getCol()) == 2) {
+                    // kurze Rochade
+                    if (to.getCol() == 6) {
+                        Position rookFrom = new Position(row, 7);
+                        Position rookTo = new Position(row, 5);
+                        ChessPiece rook = getPiece(rookFrom);
+                        if (rook != null) {
+                            setPiece(rookTo, rook);
+                            rook.setPosition(rookTo);
+                            setPiece(rookFrom, null);
+                        }
+                    }
+                    // lange Rochade
+                    if (to.getCol() == 2) {
+                        Position rookFrom = new Position(row, 0);
+                        Position rookTo = new Position(row, 3);
+                        ChessPiece rook = getPiece(rookFrom);
+                        if (rook != null) {
+                            setPiece(rookTo, rook);
+                            rook.setPosition(rookTo);
+                            setPiece(rookFrom, null);
+                        }
+                    }
+                }
             }
         }
     }
@@ -74,36 +84,60 @@ public class Board {
         return lastMoveTo;
     }
 
+    public void setupInitialPosition() {
+        for (int col = 0; col < 8; col++) {
+            setPiece(new Position(6, col), new Pawn(ChessPiece.Color.WHITE, new Position(6, col)));
+            setPiece(new Position(1, col), new Pawn(ChessPiece.Color.BLACK, new Position(1, col)));
+        }
+
+        // Weiße Figuren
+        setPiece(new Position(7, 0), new Rook(ChessPiece.Color.WHITE, new Position(7, 0)));
+        setPiece(new Position(7, 1), new Knight(ChessPiece.Color.WHITE, new Position(7, 1)));
+        setPiece(new Position(7, 2), new Bishop(ChessPiece.Color.WHITE, new Position(7, 2)));
+        setPiece(new Position(7, 3), new Queen(ChessPiece.Color.WHITE, new Position(7, 3)));
+        setPiece(new Position(7, 4), new King(ChessPiece.Color.WHITE, new Position(7, 4)));
+        setPiece(new Position(7, 5), new Bishop(ChessPiece.Color.WHITE, new Position(7, 5)));
+        setPiece(new Position(7, 6), new Knight(ChessPiece.Color.WHITE, new Position(7, 6)));
+        setPiece(new Position(7, 7), new Rook(ChessPiece.Color.WHITE, new Position(7, 7)));
+
+        // Schwarze Figuren
+        setPiece(new Position(0, 0), new Rook(ChessPiece.Color.BLACK, new Position(0, 0)));
+        setPiece(new Position(0, 1), new Knight(ChessPiece.Color.BLACK, new Position(0, 1)));
+        setPiece(new Position(0, 2), new Bishop(ChessPiece.Color.BLACK, new Position(0, 2)));
+        setPiece(new Position(0, 3), new Queen(ChessPiece.Color.BLACK, new Position(0, 3)));
+        setPiece(new Position(0, 4), new King(ChessPiece.Color.BLACK, new Position(0, 4)));
+        setPiece(new Position(0, 5), new Bishop(ChessPiece.Color.BLACK, new Position(0, 5)));
+        setPiece(new Position(0, 6), new Knight(ChessPiece.Color.BLACK, new Position(0, 6)));
+        setPiece(new Position(0, 7), new Rook(ChessPiece.Color.BLACK, new Position(0, 7)));
+    }
+
+    public void printBoard() {
+        for (int row = 0; row < 8; row++) {
+            System.out.print((8 - row) + " ");
+            for (int col = 0; col < 8; col++) {
+                ChessPiece piece = grid[row][col];
+                System.out.print((piece != null ? piece.getSymbol() : ".") + " ");
+            }
+            System.out.println();
+        }
+        System.out.println("  a b c d e f g h");
+    }
+
     public boolean isKingInCheck(ChessPiece.Color color) {
-        Position kingPos = findKingPosition(color);
+        Position kingPos = findKing(color);
         if (kingPos == null) return false;
 
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 ChessPiece piece = getPiece(new Position(row, col));
                 if (piece != null && piece.getColor() != color) {
-                    List<Position> moves = piece.getLegalMoves(this);
-                    // Prüfen, ob der König bedroht wird
-                    if (moves.contains(kingPos)) {
+                    if (piece.getLegalMoves(this).contains(kingPos)) {
                         return true;
                     }
                 }
             }
         }
-
         return false;
-    }
-
-    private Position findKingPosition(ChessPiece.Color color) {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                ChessPiece piece = getPiece(new Position(row, col));
-                if (piece instanceof King && piece.getColor() == color) {
-                    return new Position(row, col);
-                }
-            }
-        }
-        return null;
     }
 
     public boolean isCheckmate(ChessPiece.Color color) {
@@ -138,45 +172,15 @@ public class Board {
         return true;
     }
 
-    public void setupInitialPosition() {
-        // Bauern
-        for (int col = 0; col < 8; col++) {
-            setPiece(new Position(6, col), new Pawn(ChessPiece.Color.WHITE, new Position(6, col)));
-            setPiece(new Position(1, col), new Pawn(ChessPiece.Color.BLACK, new Position(1, col)));
-        }
-
-        // Weiße Figuren
-        setPiece(new Position(7, 0), new Rook(ChessPiece.Color.WHITE, new Position(7, 0)));
-        setPiece(new Position(7, 1), new Knight(ChessPiece.Color.WHITE, new Position(7, 1)));
-        setPiece(new Position(7, 2), new Bishop(ChessPiece.Color.WHITE, new Position(7, 2)));
-        setPiece(new Position(7, 3), new Queen(ChessPiece.Color.WHITE, new Position(7, 3)));
-        setPiece(new Position(7, 4), new King(ChessPiece.Color.WHITE, new Position(7, 4)));
-        setPiece(new Position(7, 5), new Bishop(ChessPiece.Color.WHITE, new Position(7, 5)));
-        setPiece(new Position(7, 6), new Knight(ChessPiece.Color.WHITE, new Position(7, 6)));
-        setPiece(new Position(7, 7), new Rook(ChessPiece.Color.WHITE, new Position(7, 7)));
-
-        // Schwarze Figuren
-        setPiece(new Position(0, 0), new Rook(ChessPiece.Color.BLACK, new Position(0, 0)));
-        setPiece(new Position(0, 1), new Knight(ChessPiece.Color.BLACK, new Position(0, 1)));
-        setPiece(new Position(0, 2), new Bishop(ChessPiece.Color.BLACK, new Position(0, 2)));
-        setPiece(new Position(0, 3), new Queen(ChessPiece.Color.BLACK, new Position(0, 3)));
-        setPiece(new Position(0, 4), new King(ChessPiece.Color.BLACK, new Position(0, 4)));
-        setPiece(new Position(0, 5), new Bishop(ChessPiece.Color.BLACK, new Position(0, 5)));
-        setPiece(new Position(0, 6), new Knight(ChessPiece.Color.BLACK, new Position(0, 6)));
-        setPiece(new Position(0, 7), new Rook(ChessPiece.Color.BLACK, new Position(0, 7)));
-    }
-    public void printBoard() {
+    public Position findKing(ChessPiece.Color color) {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 ChessPiece piece = getPiece(new Position(row, col));
-                if (piece != null) {
-                    System.out.print(piece.getSymbol() + " ");
-                } else {
-                    System.out.print(". ");
+                if (piece instanceof King && piece.getColor() == color) {
+                    return piece.getPosition();
                 }
             }
-            System.out.println(8 - row);
         }
-        System.out.println("a b c d e f g h");
+        return null;
     }
 }

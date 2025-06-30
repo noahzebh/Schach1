@@ -11,19 +11,32 @@ public class ChessGUI extends JFrame {
     private JButton[][] buttons;
     private Position selectedFrom = null;
 
-    public ChessGUI() {
-        setTitle("Schach");
+    private JLabel whiteClockLabel;
+    private JLabel blackClockLabel;
+    private Timer activeTimer;
+    private long lastTickTime;
+
+    public ChessGUI(int minutes, int increment) {
+        setTitle("Schach mit Zeitkontrolle");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 600);
-        setLayout(new GridLayout(8, 8));
+        setLayout(new BorderLayout());
 
         board = new Board();
-        whitePlayer = new Player("Weiß", ChessPiece.Color.WHITE);
-        blackPlayer = new Player("Schwarz", ChessPiece.Color.BLACK);
+        whitePlayer = new Player("Weiß", ChessPiece.Color.WHITE, minutes, increment);
+        blackPlayer = new Player("Schwarz", ChessPiece.Color.BLACK, minutes, increment);
         currentPlayer = whitePlayer;
 
-        buttons = new JButton[8][8];
+        JPanel clockPanel = new JPanel(new GridLayout(1, 2));
+        whiteClockLabel = new JLabel("Weiß: 05:00", SwingConstants.CENTER);
+        blackClockLabel = new JLabel("Schwarz: 05:00", SwingConstants.CENTER);
+        whiteClockLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        blackClockLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        clockPanel.add(whiteClockLabel);
+        clockPanel.add(blackClockLabel);
+        add(clockPanel, BorderLayout.NORTH);
 
+        JPanel boardPanel = new JPanel(new GridLayout(8, 8));
+        buttons = new JButton[8][8];
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 JButton button = new JButton();
@@ -32,11 +45,14 @@ public class ChessGUI extends JFrame {
                 int finalCol = col;
                 button.addActionListener(e -> handleClick(finalRow, finalCol));
                 buttons[row][col] = button;
-                add(button);
+                boardPanel.add(button);
             }
         }
+        add(boardPanel, BorderLayout.CENTER);
 
         refreshBoard();
+        startTimerForCurrentPlayer();
+        setSize(600, 650);
         setVisible(true);
     }
 
@@ -55,19 +71,18 @@ public class ChessGUI extends JFrame {
                 List<Position> safeMoves = movingPiece.getSafeMoves(board);
                 if (safeMoves.contains(clicked)) {
                     board.movePiece(selectedFrom, clicked);
+                    currentPlayer.addIncrement(); // Inkrement nach Zug
                     refreshBoard();
 
-                    if (board.isKingInCheck(getOpponent().getColor())) {
-                        JOptionPane.showMessageDialog(this, getOpponent().getName() + " steht im Schach!");
-                    }
-
                     if (board.isCheckmate(getOpponent().getColor())) {
+                        stopActiveTimer();
                         JOptionPane.showMessageDialog(this, "Schachmatt! " + currentPlayer.getName() + " gewinnt!");
                         disableAllButtons();
                         return;
                     }
 
                     if (board.isStalemate(getOpponent().getColor())) {
+                        stopActiveTimer();
                         JOptionPane.showMessageDialog(this, "Patt! Unentschieden.");
                         disableAllButtons();
                         return;
@@ -92,12 +107,25 @@ public class ChessGUI extends JFrame {
     private void refreshBoard() {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
-                ChessPiece piece = board.getPiece(new Position(row, col));
+                Position pos = new Position(row, col);
+                ChessPiece piece = board.getPiece(pos);
                 JButton button = buttons[row][col];
+
                 button.setText(piece != null ? piece.getSymbol() : "");
-                button.setBackground((row + col) % 2 == 0 ? Color.WHITE : Color.LIGHT_GRAY);
+                Color bg = (row + col) % 2 == 0 ? Color.WHITE : Color.LIGHT_GRAY;
+                button.setBackground(bg);
             }
         }
+
+        if (board.isKingInCheck(currentPlayer.getColor())) {
+            Position kingPos = board.findKing(currentPlayer.getColor());
+            if (kingPos != null) {
+                buttons[kingPos.getRow()][kingPos.getCol()].setBackground(Color.RED);
+            }
+        }
+
+        whiteClockLabel.setText("Weiß: " + whitePlayer.getFormattedTime());
+        blackClockLabel.setText("Schwarz: " + blackPlayer.getFormattedTime());
     }
 
     private void disableAllButtons() {
@@ -109,15 +137,38 @@ public class ChessGUI extends JFrame {
     }
 
     private void switchTurn() {
+        stopActiveTimer();
         currentPlayer = (currentPlayer == whitePlayer) ? blackPlayer : whitePlayer;
         setTitle("Schach – " + currentPlayer.getName() + " ist am Zug");
+        startTimerForCurrentPlayer();
     }
 
     private Player getOpponent() {
         return currentPlayer == whitePlayer ? blackPlayer : whitePlayer;
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(ChessGUI::new);
+    private void startTimerForCurrentPlayer() {
+        lastTickTime = System.currentTimeMillis();
+        activeTimer = new Timer(1000, e -> {
+            long now = System.currentTimeMillis();
+            long elapsed = now - lastTickTime;
+            lastTickTime = now;
+
+            currentPlayer.decreaseTime(elapsed);
+            refreshBoard();
+
+            if (currentPlayer.getTimeLeftMillis() <= 0) {
+                stopActiveTimer();
+                JOptionPane.showMessageDialog(this, getOpponent().getName() + " gewinnt – Zeit abgelaufen!");
+                disableAllButtons();
+            }
+        });
+        activeTimer.start();
+    }
+
+    private void stopActiveTimer() {
+        if (activeTimer != null && activeTimer.isRunning()) {
+            activeTimer.stop();
+        }
     }
 }
