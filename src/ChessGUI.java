@@ -15,6 +15,18 @@ public class ChessGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(600, 600);
         setLayout(new GridLayout(8, 8));
+        JMenuBar menuBar = new JMenuBar();
+        JMenu gameMenu = new JMenu("Game");
+        JMenuItem newGameItem = new JMenuItem("Neues Spiel");
+        JMenuItem saveItem = new JMenuItem("Speichern");
+        menuBar.add(gameMenu);
+        gameMenu.add(newGameItem);
+        gameMenu.add(saveItem);
+        setJMenuBar(menuBar);
+
+        saveItem.addActionListener(e -> {
+            board.saveToFile();
+        });
 
         board = new Board();
         whitePlayer = new Player("Weiß", ChessPiece.Color.WHITE);
