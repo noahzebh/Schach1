@@ -1,9 +1,14 @@
-public class Board {
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Board implements Serializable {
     private ChessPiece[][] grid;
-    private Position lastMoveFrom;
-    private Position lastMoveTo;
+    private List<PositionPair> movesHistory;
+    private File save= new File("src/data/save.txt");
 
     public Board() {
+        movesHistory = new ArrayList<>();
         grid = new ChessPiece[8][8];
         setupInitialPosition();
     }
@@ -22,69 +27,31 @@ public class Board {
     public void movePiece(Position from, Position to) {
         ChessPiece piece = getPiece(from);
         if (piece != null) {
-            lastMoveFrom = from;
-            lastMoveTo = to;
-
-            // En-passant-Schlag
-            if (piece instanceof Pawn && from.getCol() != to.getCol() && getPiece(to) == null) {
-                int direction = piece.isWhite() ? 1 : -1;
-                Position enemyPos = new Position(to.getRow() + direction, to.getCol());
-                setPiece(enemyPos, null);
-            }
-
-            // Normale Bewegung
             setPiece(to, piece);
             piece.setPosition(to);
             setPiece(from, null);
-
-            // Umwandlung
-            if (piece instanceof Pawn) {
-                int endRow = piece.isWhite() ? 0 : 7;
-                if (to.getRow() == endRow) {
-                    setPiece(to, new Queen(piece.getColor(), to));
-                }
-            }
-
-            // Rochade
-            if (piece instanceof King) {
-                int row = from.getRow();
-                if (Math.abs(from.getCol() - to.getCol()) == 2) {
-                    // kurze Rochade
-                    if (to.getCol() == 6) {
-                        Position rookFrom = new Position(row, 7);
-                        Position rookTo = new Position(row, 5);
-                        ChessPiece rook = getPiece(rookFrom);
-                        if (rook != null) {
-                            setPiece(rookTo, rook);
-                            rook.setPosition(rookTo);
-                            setPiece(rookFrom, null);
-                        }
-                    }
-                    // lange Rochade
-                    if (to.getCol() == 2) {
-                        Position rookFrom = new Position(row, 0);
-                        Position rookTo = new Position(row, 3);
-                        ChessPiece rook = getPiece(rookFrom);
-                        if (rook != null) {
-                            setPiece(rookTo, rook);
-                            rook.setPosition(rookTo);
-                            setPiece(rookFrom, null);
-                        }
-                    }
-                }
-            }
+            movesHistory.add(new PositionPair(from, to));
         }
     }
 
-    public Position getLastMoveFrom() {
-        return lastMoveFrom;
+    public void saveToFile() {
+        try {
+            FileWriter fw = new FileWriter(save);
+            for (PositionPair move : movesHistory) {
+                fw.write(move.from().serialize() + "=" + move.to().serialize() + "\n");
+
+            }
+
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Position getLastMoveTo() {
-        return lastMoveTo;
-    }
 
-    public void setupInitialPosition() {
+
+             public void setupInitialPosition() {
+        // Bauern
         for (int col = 0; col < 8; col++) {
             setPiece(new Position(6, col), new Pawn(ChessPiece.Color.WHITE, new Position(6, col)));
             setPiece(new Position(1, col), new Pawn(ChessPiece.Color.BLACK, new Position(1, col)));
@@ -111,7 +78,7 @@ public class Board {
         setPiece(new Position(0, 7), new Rook(ChessPiece.Color.BLACK, new Position(0, 7)));
     }
 
-    public void printBoard() {
+        public void printBoard() {
         for (int row = 0; row < 8; row++) {
             System.out.print((8 - row) + " ");
             for (int col = 0; col < 8; col++) {
@@ -122,65 +89,5 @@ public class Board {
         }
         System.out.println("  a b c d e f g h");
     }
-
-    public boolean isKingInCheck(ChessPiece.Color color) {
-        Position kingPos = findKing(color);
-        if (kingPos == null) return false;
-
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                ChessPiece piece = getPiece(new Position(row, col));
-                if (piece != null && piece.getColor() != color) {
-                    if (piece.getLegalMoves(this).contains(kingPos)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    public boolean isCheckmate(ChessPiece.Color color) {
-        if (!isKingInCheck(color)) return false;
-
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                ChessPiece piece = getPiece(new Position(row, col));
-                if (piece != null && piece.getColor() == color) {
-                    if (!piece.getSafeMoves(this).isEmpty()) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    public boolean isStalemate(ChessPiece.Color color) {
-        if (isKingInCheck(color)) return false;
-
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                ChessPiece piece = getPiece(new Position(row, col));
-                if (piece != null && piece.getColor() == color) {
-                    if (!piece.getSafeMoves(this).isEmpty()) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    public Position findKing(ChessPiece.Color color) {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                ChessPiece piece = getPiece(new Position(row, col));
-                if (piece instanceof King && piece.getColor() == color) {
-                    return piece.getPosition();
-                }
-            }
-        }
-        return null;
-    }
 }
+
