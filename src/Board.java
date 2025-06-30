@@ -1,7 +1,8 @@
-import java.io.Serializable;
-
-public class Board implements Serializable {
+import java.util.List;
+public class Board {
     private ChessPiece[][] grid;
+    private Position lastMoveFrom;
+    private Position lastMoveTo;
 
     public Board() {
         grid = new ChessPiece[8][8];
@@ -21,11 +22,120 @@ public class Board implements Serializable {
 
     public void movePiece(Position from, Position to) {
         ChessPiece piece = getPiece(from);
-        if (piece != null) {
-            setPiece(to, piece);
-            piece.setPosition(to);
-            setPiece(from, null);
+        if (piece == null) return;
+
+        // Speichern für en passant
+        lastMoveFrom = from;
+        lastMoveTo = to;
+
+        // En passant
+        if (piece instanceof Pawn && from.getCol() != to.getCol() && getPiece(to) == null) {
+            int direction = piece.isWhite() ? 1 : -1;
+            Position enemyPos = new Position(to.getRow() + direction, to.getCol());
+            setPiece(enemyPos, null);
         }
+
+        // Rochade
+        if (piece instanceof King && Math.abs(to.getCol() - from.getCol()) == 2) {
+            int row = from.getRow();
+            if (to.getCol() == 6) { // kurze Rochade
+                ChessPiece rook = getPiece(new Position(row, 7));
+                setPiece(new Position(row, 5), rook);
+                rook.setPosition(new Position(row, 5));
+                setPiece(new Position(row, 7), null);
+            } else if (to.getCol() == 2) { // lange Rochade
+                ChessPiece rook = getPiece(new Position(row, 0));
+                setPiece(new Position(row, 3), rook);
+                rook.setPosition(new Position(row, 3));
+                setPiece(new Position(row, 0), null);
+            }
+        }
+
+        // Zug durchführen
+        setPiece(to, piece);
+        piece.setPosition(to);
+        setPiece(from, null);
+        piece.setHasMoved(true);
+
+        // Umwandlung in Dame
+        if (piece instanceof Pawn) {
+            int endRow = piece.isWhite() ? 0 : 7;
+            if (to.getRow() == endRow) {
+                setPiece(to, new Queen(piece.getColor(), to));
+            }
+        }
+    }
+
+    public Position getLastMoveFrom() {
+        return lastMoveFrom;
+    }
+
+    public Position getLastMoveTo() {
+        return lastMoveTo;
+    }
+
+    public boolean isKingInCheck(ChessPiece.Color color) {
+        Position kingPos = findKingPosition(color);
+        if (kingPos == null) return false;
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                ChessPiece piece = getPiece(new Position(row, col));
+                if (piece != null && piece.getColor() != color) {
+                    List<Position> moves = piece.getLegalMoves(this);
+                    // Prüfen, ob der König bedroht wird
+                    if (moves.contains(kingPos)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private Position findKingPosition(ChessPiece.Color color) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                ChessPiece piece = getPiece(new Position(row, col));
+                if (piece instanceof King && piece.getColor() == color) {
+                    return new Position(row, col);
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean isCheckmate(ChessPiece.Color color) {
+        if (!isKingInCheck(color)) return false;
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                ChessPiece piece = getPiece(new Position(row, col));
+                if (piece != null && piece.getColor() == color) {
+                    if (!piece.getSafeMoves(this).isEmpty()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean isStalemate(ChessPiece.Color color) {
+        if (isKingInCheck(color)) return false;
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                ChessPiece piece = getPiece(new Position(row, col));
+                if (piece != null && piece.getColor() == color) {
+                    if (!piece.getSafeMoves(this).isEmpty()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     public void setupInitialPosition() {
@@ -55,17 +165,18 @@ public class Board implements Serializable {
         setPiece(new Position(0, 6), new Knight(ChessPiece.Color.BLACK, new Position(0, 6)));
         setPiece(new Position(0, 7), new Rook(ChessPiece.Color.BLACK, new Position(0, 7)));
     }
-
     public void printBoard() {
         for (int row = 0; row < 8; row++) {
-            System.out.print((8 - row) + " ");
             for (int col = 0; col < 8; col++) {
-                ChessPiece piece = grid[row][col];
-                System.out.print((piece != null ? piece.getSymbol() : ".") + " ");
+                ChessPiece piece = getPiece(new Position(row, col));
+                if (piece != null) {
+                    System.out.print(piece.getSymbol() + " ");
+                } else {
+                    System.out.print(". ");
+                }
             }
-            System.out.println();
+            System.out.println(8 - row);
         }
-        System.out.println("  a b c d e f g h");
+        System.out.println("a b c d e f g h");
     }
 }
-

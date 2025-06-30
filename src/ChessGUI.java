@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 
 public class ChessGUI extends JFrame {
     private Board board;
@@ -44,17 +45,34 @@ public class ChessGUI extends JFrame {
         ChessPiece clickedPiece = board.getPiece(clicked);
 
         if (selectedFrom == null) {
-            // Startfeld wählen
             if (clickedPiece != null && clickedPiece.getColor() == currentPlayer.getColor()) {
                 selectedFrom = clicked;
                 highlightPossibleMoves(clickedPiece);
             }
         } else {
-            // Ziel wählen
             ChessPiece movingPiece = board.getPiece(selectedFrom);
             if (movingPiece != null) {
-                if (movingPiece.getLegalMoves(board).contains(clicked)) {
+                List<Position> safeMoves = movingPiece.getSafeMoves(board);
+                if (safeMoves.contains(clicked)) {
                     board.movePiece(selectedFrom, clicked);
+                    refreshBoard();
+
+                    if (board.isKingInCheck(getOpponent().getColor())) {
+                        JOptionPane.showMessageDialog(this, getOpponent().getName() + " steht im Schach!");
+                    }
+
+                    if (board.isCheckmate(getOpponent().getColor())) {
+                        JOptionPane.showMessageDialog(this, "Schachmatt! " + currentPlayer.getName() + " gewinnt!");
+                        disableAllButtons();
+                        return;
+                    }
+
+                    if (board.isStalemate(getOpponent().getColor())) {
+                        JOptionPane.showMessageDialog(this, "Patt! Unentschieden.");
+                        disableAllButtons();
+                        return;
+                    }
+
                     switchTurn();
                 }
             }
@@ -65,7 +83,7 @@ public class ChessGUI extends JFrame {
 
     private void highlightPossibleMoves(ChessPiece piece) {
         refreshBoard();
-        for (Position move : piece.getLegalMoves(board)) {
+        for (Position move : piece.getSafeMoves(board)) {
             buttons[move.getRow()][move.getCol()].setBackground(Color.YELLOW);
         }
         buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(Color.CYAN);
@@ -82,15 +100,24 @@ public class ChessGUI extends JFrame {
         }
     }
 
+    private void disableAllButtons() {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                buttons[row][col].setEnabled(false);
+            }
+        }
+    }
+
     private void switchTurn() {
         currentPlayer = (currentPlayer == whitePlayer) ? blackPlayer : whitePlayer;
         setTitle("Schach – " + currentPlayer.getName() + " ist am Zug");
     }
 
+    private Player getOpponent() {
+        return currentPlayer == whitePlayer ? blackPlayer : whitePlayer;
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(ChessGUI::new);
     }
-    // In ChessGUI.java
-
 }
-

@@ -27,7 +27,56 @@ public class King extends ChessPiece {
             }
         }
 
+        // Rochade (nur wenn König noch nicht gezogen hat)
+        if (!hasMoved) {
+            int row = position.getRow();
+
+            // kurze Rochade (rechts)
+            Position rookPos = new Position(row, 7);
+            ChessPiece rook = board.getPiece(rookPos);
+            if (rook instanceof Rook && !rook.hasMoved()) {
+                if (board.getPiece(new Position(row, 5)) == null &&
+                        board.getPiece(new Position(row, 6)) == null &&
+                        !board.isKingInCheck(color) &&
+                        !wouldBeInCheck(board, new Position(row, 5)) &&
+                        !wouldBeInCheck(board, new Position(row, 6))) {
+                    moves.add(new Position(row, 6));
+                }
+            }
+
+            // lange Rochade (links)
+            rookPos = new Position(row, 0);
+            rook = board.getPiece(rookPos);
+            if (rook instanceof Rook && !rook.hasMoved()) {
+                if (board.getPiece(new Position(row, 1)) == null &&
+                        board.getPiece(new Position(row, 2)) == null &&
+                        board.getPiece(new Position(row, 3)) == null &&
+                        !board.isKingInCheck(color) &&
+                        !wouldBeInCheck(board, new Position(row, 2)) &&
+                        !wouldBeInCheck(board, new Position(row, 3))) {
+                    moves.add(new Position(row, 2));
+                }
+            }
+        }
+
         return moves;
+    }
+
+    private boolean wouldBeInCheck(Board board, Position pos) {
+        Position oldPos = this.position;
+        ChessPiece captured = board.getPiece(pos);
+
+        board.setPiece(oldPos, null);
+        board.setPiece(pos, this);
+        this.position = pos;
+
+        boolean check = board.isKingInCheck(this.color);
+
+        board.setPiece(pos, captured);
+        board.setPiece(oldPos, this);
+        this.position = oldPos;
+
+        return check;
     }
 
     @Override
@@ -35,4 +84,3 @@ public class King extends ChessPiece {
         return isWhite() ? "♔" : "♚";
     }
 }
-

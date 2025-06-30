@@ -12,10 +12,7 @@ public class Rook extends ChessPiece {
         List<Position> moves = new ArrayList<>();
 
         int[][] directions = {
-                {-1, 0}, // oben
-                {1, 0},  // unten
-                {0, -1}, // links
-                {0, 1}   // rechts
+                {-1, 0}, {1, 0}, {0, -1}, {0, 1}
         };
 
         for (int[] dir : directions) {
@@ -32,9 +29,9 @@ public class Rook extends ChessPiece {
                     moves.add(next);
                 } else {
                     if (piece.getColor() != this.color) {
-                        moves.add(next); // schlagen erlaubt
+                        moves.add(next);
                     }
-                    break; // eigene Figur oder gegnerische blockiert
+                    break;
                 }
             }
         }
