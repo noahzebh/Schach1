@@ -9,18 +9,13 @@ public class ChessGUI extends JFrame {
     private Player currentPlayer;
     private JButton[][] buttons;
     private Position selectedFrom = null;
-    rivate java.util.List<String> moveHistory = new java.util.ArrayList<>();
-    private javax.swing.JTextArea moveListArea;
-    private JLabel currentPlayerLabel;
+
     public ChessGUI() {
         setTitle("Schach");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(600, 600);
         setLayout(new GridLayout(8, 8));
-        setLayout(new BorderLayout());
-        currentPlayerLabel = new JLabel("Am Zug: " + currentPlayer.getName(), SwingConstants.CENTER);
-        currentPlayerLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        add(currentPlayerLabel, BorderLayout.NORTH);
+
         board = new Board();
         whitePlayer = new Player("Weiß", ChessPiece.Color.WHITE);
         blackPlayer = new Player("Schwarz", ChessPiece.Color.BLACK);
@@ -85,21 +80,13 @@ public class ChessGUI extends JFrame {
                 button.setBackground((row + col) % 2 == 0 ? Color.WHITE : Color.LIGHT_GRAY);
             }
         }
-        currentPlayerLabel.setText("Am Zug: " + currentPlayer.getName());
-        setTitle("Schach – " + currentPlayer.getName() + " ist am Zug");
     }
 
     private void switchTurn() {
         currentPlayer = (currentPlayer == whitePlayer) ? blackPlayer : whitePlayer;
         setTitle("Schach – " + currentPlayer.getName() + " ist am Zug");
     }
-    private void updateMoveList() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < moveHistory.size(); i++) {
-            sb.append((i + 1)).append(". ").append(moveHistory.get(i)).append("\n");
-        }
-        moveListArea.setText(sb.toString());
-    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(ChessGUI::new);
     }
