@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.Color;
+
 
 public class ChessGUI extends JFrame {
     private Board board;
@@ -78,9 +80,9 @@ public class ChessGUI extends JFrame {
     private void highlightPossibleMoves(ChessPiece piece) {
         refreshBoard();
         for (Position move : piece.getLegalMoves(board)) {
-            buttons[move.getRow()][move.getCol()].setBackground(Color.YELLOW);
+            buttons[move.getRow()][move.getCol()].setBackground(Color(int 168, int 228, int 160));
         }
-        buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(Color.CYAN);
+        buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(Color(int 0, int 100, int 0));
     }
 
     private void refreshBoard() {
