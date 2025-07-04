@@ -99,9 +99,9 @@ public class ChessGUI extends JFrame {
     private void highlightPossibleMoves(ChessPiece piece) {
         refreshBoard();
         for (Position move : piece.getSafeMoves(board)) {
-            buttons[move.getRow()][move.getCol()].setBackground(new Color(120, 180, 90)); // Grün für mögliche Züge
+            buttons[move.getRow()][move.getCol()].setBackground(new Color(123, 165, 102)); // Grün für mögliche Züge
         }
-        buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(new Color(0, 100, 0)); // Dunkelgrün für aktive Figur
+        buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(new Color(123, 165, 102)); // Dunkelgrün für aktive Figur
     }
 
     private void refreshBoard() {
