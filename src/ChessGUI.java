@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
-import java.awt.Color;
 
 public class ChessGUI extends JFrame {
     private Board board;
@@ -100,9 +99,9 @@ public class ChessGUI extends JFrame {
     private void highlightPossibleMoves(ChessPiece piece) {
         refreshBoard();
         for (Position move : piece.getSafeMoves(board)) {
-            buttons[move.getRow()][move.getCol()].setBackground(new Color(120, 180, 90));
+            buttons[move.getRow()][move.getCol()].setBackground(new Color(120, 180, 90)); // Grün für mögliche Züge
         }
-        buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(new Color(0, 100, 0));
+        buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(new Color(0, 100, 0)); // Dunkelgrün für aktive Figur
     }
 
     private void refreshBoard() {
@@ -113,15 +112,19 @@ public class ChessGUI extends JFrame {
                 JButton button = buttons[row][col];
 
                 button.setText(piece != null ? piece.getSymbol() : "");
-                Color bg = (row + col) % 2 == 0 ? Color.WHITE : Color.LIGHT_GRAY;
-                button.setBackground(bg);
+                // Farben der Felder direkt hier definiert:
+                if ((row + col) % 2 == 0) {
+                    button.setBackground(new Color(240, 217, 181)); // Helles Feld (beige)
+                } else {
+                    button.setBackground(new Color(181, 136, 99));  // Dunkles Feld (braun)
+                }
             }
         }
 
         if (board.isKingInCheck(currentPlayer.getColor())) {
             Position kingPos = board.findKing(currentPlayer.getColor());
             if (kingPos != null) {
-                buttons[kingPos.getRow()][kingPos.getCol()].setBackground(Color.RED);
+                buttons[kingPos.getRow()][kingPos.getCol()].setBackground(new Color(246, 246, 105)); // Gelbgrünes Highlight bei Schach
             }
         }
 
