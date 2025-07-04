@@ -112,7 +112,6 @@ public class ChessGUI extends JFrame {
                 JButton button = buttons[row][col];
 
                 button.setText(piece != null ? piece.getSymbol() : "");
-                // Farben der Felder direkt hier definiert:
                 if ((row + col) % 2 == 0) {
                     button.setBackground(new Color(240, 217, 181)); // Helles Feld (beige)
                 } else {
@@ -130,6 +129,16 @@ public class ChessGUI extends JFrame {
 
         whiteClockLabel.setText("Weiß: " + whitePlayer.getFormattedTime());
         blackClockLabel.setText("Schwarz: " + blackPlayer.getFormattedTime());
+
+        Color runningColor = new Color(147, 198, 122);
+        Color defaultColor = Color.BLACK;
+        if (currentPlayer == whitePlayer) {
+            whiteClockLabel.setForeground(runningColor);
+            blackClockLabel.setForeground(defaultColor);
+        } else {
+            whiteClockLabel.setForeground(defaultColor);
+            blackClockLabel.setForeground(runningColor);
+        }
     }
 
     private void disableAllButtons() {
@@ -175,4 +184,12 @@ public class ChessGUI extends JFrame {
             activeTimer.stop();
         }
     }
+
+    // Main-Methode zum Starten der GUI
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new ChessGUI(5, 0); // Beispiel: 5 Minuten pro Spieler, kein Inkrement
+        });
+    }
 }
+
