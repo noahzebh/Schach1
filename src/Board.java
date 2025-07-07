@@ -1,8 +1,8 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Board {
     private ChessPiece[][] grid;
@@ -77,18 +77,24 @@ public class Board {
     }
 
     public void saveMoves() {
-        try {
-            FileWriter writer = new FileWriter(fileSave);
-            System.out.println(moveHistory.isEmpty());
-            for (PositionPair pair : moveHistory) {
-                writer.write(pair.toString() + "\n");
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
+        String filename = "save_" + timestamp + ".txt";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            for (String move : getMoveHistory()) { // getMoveHistory() gibt die Züge als List\<String\> zurück
+                writer.write(move);
+                writer.newLine();
             }
-            writer.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
-
+    public List<String> getMoveHistory() {
+        List<String> moves = new ArrayList<>();
+        for (PositionPair pair : moveHistory) {
+            moves.add(pair.toString()); // Stelle sicher, dass PositionPair sinnvoll als String ausgegeben wird, z.B. "e2=e4"
+        }
+        return moves;
+    }
 
     public Position getLastMoveFrom() {
         return lastMoveFrom;
@@ -198,5 +204,22 @@ public class Board {
         return null;
     }
 
-
+    // In Board.java
+    public void loadMoves(String filename) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileSave))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("=") && line.length() >= 5) {
+                    String[] parts = line.split("=");
+                    if (parts.length == 2) {
+                        Position from = new Position(8 - Character.getNumericValue(parts[0].charAt(1)), parts[0].charAt(0) - 'a');
+                        Position to = new Position(8 - Character.getNumericValue(parts[1].charAt(1)), parts[1].charAt(0) - 'a');
+                        movePiece(from, to);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

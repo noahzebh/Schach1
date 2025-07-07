@@ -28,6 +28,19 @@ public class ChessGUI extends JFrame {
         gameMenu.add(newGameItem);
         gameMenu.add(saveItem);
         setJMenuBar(menuBar);
+        JMenuItem loadItem = new JMenuItem("Laden");
+        gameMenu.add(loadItem);
+
+        loadItem.addActionListener(e -> {
+            board.loadMoves("save.txt");
+            refreshBoard();
+        });
+
+
+        newGameItem.addActionListener(e -> {
+            dispose(); // aktuelles Fenster schließen
+            new ChessGUI(5, 0); // neues Spiel mit Standardwerten starten (z.B. 5 Minuten, 0 Inkrement)
+        });
 
         saveItem.addActionListener(e -> {
             board.saveMoves();
@@ -203,6 +216,10 @@ public class ChessGUI extends JFrame {
         SwingUtilities.invokeLater(() -> {
             new ChessGUI(5, 0); // Beispiel: 5 Minuten pro Spieler, kein Inkrement
         });
+    }
+
+    public Board getBoard() {
+        return board;
     }
 }
 

@@ -1,3 +1,4 @@
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.LinkedHashMap;
@@ -35,8 +36,15 @@ public class StartMenu extends JFrame {
             });
             buttonPanel.add(btn);
         }
-
         add(buttonPanel, BorderLayout.CENTER);
+
+        JButton loadButton = new JButton("Laden");
+        loadButton.addActionListener(e -> {
+            ChessGUI chessGUI = new ChessGUI(5, 1);
+            chessGUI.getBoard().loadMoves("save.txt");
+        });
+        add(loadButton, BorderLayout.SOUTH);
+
         setLocationRelativeTo(null);
         setVisible(true);
     }
