@@ -37,5 +37,14 @@ public class Position {
         int rank = 8 - row;
         return "" + file + rank;
     }
+
+    public String serialize() {
+        return row + "," + col;
+    }
+
+    public static Position fromString(String str) {
+        String[] positionen = str.split(",");
+        return new Position(Integer.valueOf(positionen[0]), Integer.valueOf(positionen[1]));
+    }
 }
 

@@ -1,12 +1,22 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Board {
     private ChessPiece[][] grid;
     private Position lastMoveFrom;
     private Position lastMoveTo;
+    File fileSave = new File("save.txt");
+
+    private List<PositionPair> moveHistory = new ArrayList<>();
 
     public Board() {
         grid = new ChessPiece[8][8];
         setupInitialPosition();
-    }
+        System.out.println(fileSave.getAbsolutePath());
+        }
 
     public ChessPiece getPiece(Position pos) {
         if (!pos.isValid()) return null;
@@ -21,60 +31,64 @@ public class Board {
 
     public void movePiece(Position from, Position to) {
         ChessPiece piece = getPiece(from);
-        if (piece != null) {
-            lastMoveFrom = from;
-            lastMoveTo = to;
+        if (piece == null) return;
 
-            // En-passant-Schlag
-            if (piece instanceof Pawn && from.getCol() != to.getCol() && getPiece(to) == null) {
-                int direction = piece.isWhite() ? 1 : -1;
-                Position enemyPos = new Position(to.getRow() + direction, to.getCol());
-                setPiece(enemyPos, null);
-            }
+        lastMoveFrom = from;
+        lastMoveTo = to;
 
-            // Normale Bewegung
-            setPiece(to, piece);
-            piece.setPosition(to);
-            setPiece(from, null);
+        // Spezialfall: En-passant
+        if (piece instanceof Pawn && from.getCol() != to.getCol() && getPiece(to) == null) {
+            int dir = piece.isWhite() ? 1 : -1;
+            setPiece(new Position(to.getRow() + dir, to.getCol()), null);
+        }
 
-            // Umwandlung
-            if (piece instanceof Pawn) {
-                int endRow = piece.isWhite() ? 0 : 7;
-                if (to.getRow() == endRow) {
-                    setPiece(to, new Queen(piece.getColor(), to));
-                }
-            }
+        // Figur bewegen
+        executeMove(from, to, piece);
 
-            // Rochade
-            if (piece instanceof King) {
-                int row = from.getRow();
-                if (Math.abs(from.getCol() - to.getCol()) == 2) {
-                    // kurze Rochade
-                    if (to.getCol() == 6) {
-                        Position rookFrom = new Position(row, 7);
-                        Position rookTo = new Position(row, 5);
-                        ChessPiece rook = getPiece(rookFrom);
-                        if (rook != null) {
-                            setPiece(rookTo, rook);
-                            rook.setPosition(rookTo);
-                            setPiece(rookFrom, null);
-                        }
-                    }
-                    // lange Rochade
-                    if (to.getCol() == 2) {
-                        Position rookFrom = new Position(row, 0);
-                        Position rookTo = new Position(row, 3);
-                        ChessPiece rook = getPiece(rookFrom);
-                        if (rook != null) {
-                            setPiece(rookTo, rook);
-                            rook.setPosition(rookTo);
-                            setPiece(rookFrom, null);
-                        }
-                    }
-                }
-            }
+        // Spezialfall: Umwandlung
+        if (piece instanceof Pawn && (to.getRow() == (piece.isWhite() ? 0 : 7))) {
+            setPiece(to, new Queen(piece.getColor(), to));
+        }
+
+        // Spezialfall: Rochade
+        if (piece instanceof King && Math.abs(from.getCol() - to.getCol()) == 2) {
+            performCastling(from, to);
         }
     }
+
+    private void executeMove(Position from, Position to, ChessPiece piece) {
+        setPiece(to, piece);
+        piece.setPosition(to);
+        setPiece(from, null);
+        moveHistory.add(new PositionPair(from, to));
+    }
+
+    private void performCastling(Position kingFrom, Position kingTo) {
+        int row = kingFrom.getRow();
+        boolean kingside = kingTo.getCol() == 6;
+
+        Position rookFrom = new Position(row, kingside ? 7 : 0);
+        Position rookTo = new Position(row, kingside ? 5 : 3);
+
+        ChessPiece rook = getPiece(rookFrom);
+        if (rook != null) {
+            executeMove(rookFrom, rookTo, rook);
+        }
+    }
+
+    public void saveMoves() {
+        try {
+            FileWriter writer = new FileWriter(fileSave);
+            System.out.println(moveHistory.isEmpty());
+            for (PositionPair pair : moveHistory) {
+                writer.write(pair.toString() + "\n");
+            }
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     public Position getLastMoveFrom() {
         return lastMoveFrom;
@@ -183,4 +197,6 @@ public class Board {
         }
         return null;
     }
+
+
 }

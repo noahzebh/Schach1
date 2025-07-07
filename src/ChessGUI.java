@@ -20,6 +20,19 @@ public class ChessGUI extends JFrame {
         setTitle("Schach mit Zeitkontrolle");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+        JMenuBar menuBar = new JMenuBar();
+        JMenu gameMenu = new JMenu("Game");
+        JMenuItem newGameItem = new JMenuItem("Neues Spiel");
+        JMenuItem saveItem = new JMenuItem("Speichern");
+        menuBar.add(gameMenu);
+        gameMenu.add(newGameItem);
+        gameMenu.add(saveItem);
+        setJMenuBar(menuBar);
+
+        saveItem.addActionListener(e -> {
+            board.saveMoves();
+        });
+
 
         board = new Board();
         whitePlayer = new Player("Weiß", ChessPiece.Color.WHITE, minutes, increment);
