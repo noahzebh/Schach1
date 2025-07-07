@@ -112,9 +112,9 @@ public class ChessGUI extends JFrame {
     private void highlightPossibleMoves(ChessPiece piece) {
         refreshBoard();
         for (Position move : piece.getSafeMoves(board)) {
-            buttons[move.getRow()][move.getCol()].setBackground(Color.YELLOW);
+            buttons[move.getRow()][move.getCol()].setBackground(new Color(147, 198, 122)); // Grün für mögliche Züge
         }
-        buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(Color.CYAN);
+        buttons[piece.getPosition().getRow()][piece.getPosition().getCol()].setBackground(new Color(123, 165, 102)); // Dunkelgrün für aktive Figur
     }
 
     private void refreshBoard() {
@@ -125,20 +125,33 @@ public class ChessGUI extends JFrame {
                 JButton button = buttons[row][col];
 
                 button.setText(piece != null ? piece.getSymbol() : "");
-                Color bg = (row + col) % 2 == 0 ? Color.WHITE : Color.LIGHT_GRAY;
-                button.setBackground(bg);
+                if ((row + col) % 2 == 0) {
+                    button.setBackground(new Color(240, 217, 181)); // Helles Feld (beige)
+                } else {
+                    button.setBackground(new Color(181, 136, 99));  // Dunkles Feld (braun)
+                }
             }
         }
 
         if (board.isKingInCheck(currentPlayer.getColor())) {
             Position kingPos = board.findKing(currentPlayer.getColor());
             if (kingPos != null) {
-                buttons[kingPos.getRow()][kingPos.getCol()].setBackground(Color.RED);
+                buttons[kingPos.getRow()][kingPos.getCol()].setBackground(new Color(246, 246, 105)); // Gelbgrünes Highlight bei Schach
             }
         }
 
         whiteClockLabel.setText("Weiß: " + whitePlayer.getFormattedTime());
         blackClockLabel.setText("Schwarz: " + blackPlayer.getFormattedTime());
+
+        Color runningColor = new Color(147, 198, 122);
+        Color defaultColor = Color.BLACK;
+        if (currentPlayer == whitePlayer) {
+            whiteClockLabel.setForeground(runningColor);
+            blackClockLabel.setForeground(defaultColor);
+        } else {
+            whiteClockLabel.setForeground(defaultColor);
+            blackClockLabel.setForeground(runningColor);
+        }
     }
 
     private void disableAllButtons() {
@@ -184,4 +197,12 @@ public class ChessGUI extends JFrame {
             activeTimer.stop();
         }
     }
+
+    // Main-Methode zum Starten der GUI
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new ChessGUI(5, 0); // Beispiel: 5 Minuten pro Spieler, kein Inkrement
+        });
+    }
 }
+
