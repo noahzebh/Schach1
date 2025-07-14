@@ -16,6 +16,10 @@ public class ChessGUI extends JFrame {
     private Timer activeTimer;
     private long lastTickTime;
 
+    private JButton offerDrawButton;
+    private JButton resignButton;
+    private boolean drawOffered = false;
+
     public ChessGUI(int minutes, int increment) {
         setTitle("Schach mit Zeitkontrolle");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -76,9 +80,20 @@ public class ChessGUI extends JFrame {
         }
         add(boardPanel, BorderLayout.CENTER);
 
+        // Panel für Remis und Aufgeben Buttons
+        JPanel controlPanel = new JPanel(new FlowLayout());
+        offerDrawButton = new JButton("Remis anbieten");
+        resignButton = new JButton("Aufgeben");
+        controlPanel.add(offerDrawButton);
+        controlPanel.add(resignButton);
+        add(controlPanel, BorderLayout.SOUTH);
+
+        offerDrawButton.addActionListener(e -> handleOfferDraw());
+        resignButton.addActionListener(e -> handleResign());
+
         refreshBoard();
         startTimerForCurrentPlayer();
-        setSize(600, 650);
+        setSize(600, 700);
         setVisible(true);
     }
 
@@ -211,6 +226,37 @@ public class ChessGUI extends JFrame {
         }
     }
 
+    private void handleOfferDraw() {
+        if (drawOffered) {
+            JOptionPane.showMessageDialog(this, "Du hast bereits ein Remis angeboten. Warte auf die Antwort des Gegners.");
+            return;
+        }
+        Player opponent = getOpponent();
+        drawOffered = true;
+        int response = JOptionPane.showConfirmDialog(this,
+                opponent.getName() + ", möchtest du das Remis annehmen?",
+                "Remis-Angebot",
+                JOptionPane.YES_NO_OPTION);
+        if (response == JOptionPane.YES_OPTION) {
+            stopActiveTimer();
+            JOptionPane.showMessageDialog(this, "Remis! Das Spiel endet unentschieden.");
+            disableAllButtons();
+            offerDrawButton.setEnabled(false);
+            resignButton.setEnabled(false);
+        } else {
+            JOptionPane.showMessageDialog(this, "Remis abgelehnt.");
+            drawOffered = false;
+        }
+    }
+
+    private void handleResign() {
+        stopActiveTimer();
+        JOptionPane.showMessageDialog(this, currentPlayer.getName() + " gibt auf! " + getOpponent().getName() + " gewinnt.");
+        disableAllButtons();
+        offerDrawButton.setEnabled(false);
+        resignButton.setEnabled(false);
+    }
+
     // Main-Methode zum Starten der GUI
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -222,4 +268,3 @@ public class ChessGUI extends JFrame {
         return board;
     }
 }
-
