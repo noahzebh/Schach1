@@ -77,9 +77,7 @@ public class Board {
     }
 
     public void saveMoves() {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        String filename = "save_" + timestamp + ".txt";
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileSave))) {
             for (String move : getMoveHistory()) { // getMoveHistory() gibt die Züge als List\<String\> zurück
                 writer.write(move);
                 writer.newLine();

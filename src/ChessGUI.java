@@ -21,7 +21,7 @@ public class ChessGUI extends JFrame {
     private boolean drawOffered = false;
 
     public ChessGUI(int minutes, int increment) {
-        setTitle("Schach mit Zeitkontrolle");
+        setTitle("Schach");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         JMenuBar menuBar = new JMenuBar();
@@ -36,7 +36,7 @@ public class ChessGUI extends JFrame {
         gameMenu.add(loadItem);
 
         loadItem.addActionListener(e -> {
-            board.loadMoves("save.txt");
+            board.loadMoves("resources/save.txt");
             refreshBoard();
         });
 
